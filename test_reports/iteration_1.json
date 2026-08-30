@@ -1,0 +1,61 @@
+{
+  "summary": "Full backend + frontend E2E test of the multi-tenant AI restaurant ordering SaaS. Created a pytest regression suite (40 tests, 100% passing) covering auth/JWT, protected-route 401s, bcrypt hash format, menu CRUD (incl. availability=false persistence), restaurant + AI settings, WhatsApp provider config/masking, the complete AI ordering flow via POST /api/simulator/message, deterministic order math, status progression + WhatsApp notification, customers, conversations/handoff/human-reply, SSE stream and multi-tenant isolation. Browser-tested (Playwright, 1920x1080) login/redirect + invalid creds, dashboard KPIs, all 7 nav routes, the full Roman-Urdu simulator ordering flow, kanban Orders board with live SSE updates, order detail + status advance, Menu CRUD dialogs, Customers list/detail, WhatsApp provider switching (Simulator/Evolution/Meta) + persistence, Conversations handoff + reply box gating, Settings and AI Settings saves. ONE functional defect found: the AI creates DUPLICATE orders when the customer sends a second affirmative after an order was already placed (orders #1009 and #1010 were created 16s apart from the same cart).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/simulator/message (services/ai_service.py create_order tool)", "issue": "Duplicate order creation. After a successful create_order (state=ORDER_PLACED, cart cleared), a further affirmative message ('ji order place kar do') makes the model re-call add_to_cart from history and then create_order again, producing a second identical order. Reproduced in browser: #1009 (13:09:29) and #1010 (13:09:45), both Ali / 923063676354 / PKR 1,170 / same 3 items. Customer detail page showed 2 orders / PKR 2,340 total spent for one real order.", "priority": "CRITICAL"}
+    ],
+    "minor": [
+      {"endpoint": "GET /api/stream", "issue": "Returns HTTP 200 with an 'event: error / data: unauthorized' body when the token is missing/invalid instead of 401/403. Works for the UI, but is not a proper auth response and hides failures from monitoring."},
+      {"endpoint": "PUT /api/menu/items/{id}, PUT /api/restaurant, PUT /api/restaurant/ai-settings, PUT /api/whatsapp/{evolution,meta}", "issue": "Update handlers filter with `if v is not None`, which is correct today, but the same pattern in _public()/updates dicts means an explicit empty string cannot be distinguished from 'unset'. Verified available=false and upsell_enabled=false DO persist; flagged only as a fragility."},
+      {"endpoint": "GET /api/whatsapp/config", "issue": "webhook_url / evolution_webhook_url are built from APP_URL which resolves to a different preview host (f29a3cc4-...preview.emergentagent.com) than the public REACT_APP_BACKEND_URL (ai-order-hub-5.preview...). An owner copying the shown webhook URL into Meta/Evolution would register the wrong host."},
+      {"endpoint": "services/ai_service.py create_order", "issue": "conversation.order_id is never set (only last_order_id); GET /api/simulator/message response's conversation.order_id stays null after an order is placed, so clients cannot link the conversation to the created order from that field."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CustomerDetail - Recent Conversation panel", "issue": "AI messages are rendered with newlines collapsed and raw markdown visible (e.g. '**Burgers:**' on a single line), so the menu bubble is unreadable. The Simulator/Conversations panels render whitespace correctly.", "selector": "/customers/:id Recent Conversation bubbles", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Orders kanban board (/orders)", "issues": ["At 1920px the 6 status columns overflow horizontally and the 'Delivered' column is clipped mid-card at the right edge with no visible scroll affordance; owners may not realise more columns exist."]},
+      {"screen": "Global toasts (all pages)", "issues": ["Success toasts render on top of the top-right header and cover the owner name / Logout button while visible."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/manual_flow.py",
+    "/app/backend/tests/cleanup_test_data.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "CRITICAL: Guard against duplicate orders. In ai_service._dispatch's create_order, if conversation.state == 'ORDER_PLACED' and last_order_id exists and the placed order is recent (e.g. <10 min) with an identical item set, return {'error':'duplicate_order','order_number':...} instead of creating. Also add the placed order to the system prompt's CURRENT ORDER CONTEXT plus a rule: 'An order was just placed (#N). Do NOT add items or create another order unless the customer explicitly starts a NEW order.'",
+    "Consider making the AI less loop-prone at the confirmation step: in one run it repeated 'Fries Regular ya Loaded?' and ignored the customer's 'yes', so the summary/order never appeared until 3 more messages were sent (see rca).",
+    "Return 401 (or close the stream) from GET /api/stream on invalid/missing token instead of 200 + error event.",
+    "Set APP_URL to the public REACT_APP_BACKEND_URL host so the Meta/Evolution webhook URLs shown in the UI are the ones customers must register.",
+    "Render newlines/markdown in the CustomerDetail 'Recent Conversation' bubbles (whitespace-pre-wrap like the Simulator).",
+    "Make the Orders kanban horizontal scroll obvious (scroll-snap/shadow/edge fade) so the Delivered column isn't silently clipped, and offset toasts below the header."
+  ],
+  "critical_code_review_comments": [
+    "ai_service.create_order has no idempotency/state guard — the only preconditions are cart/order_type/address/name/min_order. Any repeated confirmation after ORDER_PLACED can create a second order because add_to_cart also resets state to SELECTING_ITEMS.",
+    "add_to_cart unconditionally sets state='SELECTING_ITEMS', silently reverting a terminal ORDER_PLACED conversation; state transitions should be validated.",
+    "Money math is correctly confined to order_service.compute_totals and validated (subtotal == sum(line_total), total == subtotal + delivery_fee, delivery fee only for delivery, currency PKR) — good separation.",
+    "All Mongo reads use the NO_ID projection and clean()/clean_list(); no _id leaked in any of the 40 asserted responses.",
+    "WhatsAppPage.jsx is 382 lines and mixes 3 provider forms + conversations + simulator wiring; consider splitting into ConnectionTab / ConversationsTab components.",
+    "Secrets handling is good: access tokens are masked server-side (_mask) and never returned in plaintext."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/manual_flow.py",
+    "/app/backend/tests/cleanup_test_data.py",
+    "/app/test_reports/iteration_1.json"
+  ],
+  "success_rate": {"backend": "100% (40/40 pytest); 1 CRITICAL functional defect found outside status-code coverage", "frontend": "97% (all flows pass; 1 low UI bug + 2 design issues)"},
+  "seed_data_creation": "Test conversations/orders were created via the simulator for phones 923009998877, 923001230011, 923063676354, 923092878630, plus a throwaway tenant (test_tenant_*@example.com) for isolation testing, and QA_TestCat/QA_TestItem menu records. ALL of it was removed afterwards with /app/backend/tests/cleanup_test_data.py; WhatsApp provider restored to 'simulator' and QA-injected Meta credentials cleared. Demo seed data (orders #1001-#1006) is intact.",
+  "should_call_test_agent_after_fix": true,
+  "should_main_agent_self_test": false,
+  "test_credentials": "owner@pizzapalace.pk / palace123 (from /app/memory/test_credentials.md); login returns {access_token, token_type, user} — note the key is access_token, NOT token; frontend stores it in localStorage under 'token'.",
+  "context_for_next_testing_agent": "Run `pytest /app/backend/tests/ -q` (pytest.ini already sets -n 2 --dist loadscope); the AI-flow class is non-deterministic and includes up to 2 confirmation retries. GET /api/auth/me returns {user, restaurant} (not a flat user). Register rejects .test TLDs (email-validator) — use @example.com. Frontend testids verified working: login-email/password/submit, nav-*, stat-today-orders/stat-today-sales/stat-pending/stat-aov, tab-simulator/tab-conversations, sim-input/sim-send/sim-reset, orders-col-<Status> (spaces -> dashes), order-card-<number>, advance-status-btn, set-status-*, add-item-btn/add-category-btn/save-item-btn/save-category-btn/item-*-input/item-category-select/avail-switch-<id>/edit-item-<id>/delete-item-<id> (delete opens an AlertDialog — must click the 'Delete' confirm button), provider-simulator/evolution/meta, conv-<id>, handoff-switch, human-reply-input/send, save-settings-btn, save-ai-btn, customer-row-<id>. SSE realtime verified: PATCHing an order status from another client moves the card between kanban columns within seconds without a refresh. AFTER the duplicate-order fix, re-verify by sending 2-3 affirmatives after confirmation and asserting only ONE order exists for that phone.",
+  "rca_of_the_issue": "Duplicate orders: create_order clears the cart and sets state=ORDER_PLACED, but nothing prevents a further turn from re-populating the cart. The system prompt still contains the full recent conversation (with the item list) and the rule 'the moment a customer names any menu item ... immediately call add_to_cart', while CURRENT ORDER CONTEXT does not mention that an order was already placed. So on a second affirmative the model calls add_to_cart for the previously ordered items (which resets state to SELECTING_ITEMS) and then create_order, which passes all preconditions again. Reproduction: /whatsapp -> Test Simulator -> 'menu dikhao', '1 zinger burger aur fries', 'haan coke', 'delivery', 'House 5, DHA Phase 6 Lahore', 'yes', 'haan order confirm kar do', 'ji order place kar do' -> two orders (#1009, #1010) with identical items. Mitigation: state/idempotency guard in the create_order tool + explicit post-order instruction in the prompt. Secondary observation (same root area): in one run the assistant looped on the 'Regular ya Loaded fries?' clarification and ignored 'yes', delaying the summary; the confirmation step needs a deterministic nudge (e.g. if order_type+address are set and the customer affirms, call calculate_cart/create_order rather than re-asking)."
+}

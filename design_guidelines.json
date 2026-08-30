@@ -1,0 +1,139 @@
+{
+  "theme": "light",
+  "typography": {
+    "fonts": {
+      "headings": "'Cabinet Grotesk', sans-serif",
+      "body": "'IBM Plex Sans', sans-serif",
+      "import_urls": [
+        "https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700,400&display=swap",
+        "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      ]
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl font-extrabold tracking-tight",
+      "h2": "text-2xl sm:text-3xl font-bold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-bold",
+      "h4": "text-lg font-semibold",
+      "body": "text-base font-normal leading-relaxed",
+      "small": "text-sm font-normal",
+      "labels": "text-xs font-bold uppercase tracking-[0.1em]"
+    }
+  },
+  "colors": {
+    "primary": {
+      "DEFAULT": "#D94833",
+      "hover": "#C23E2A",
+      "foreground": "#FFFFFF"
+    },
+    "secondary": {
+      "DEFAULT": "#2C614F",
+      "hover": "#235041",
+      "foreground": "#FFFFFF"
+    },
+    "background": {
+      "app": "#F9FAF8",
+      "surface": "#FFFFFF",
+      "whatsapp_sim_bg": "#EFEAE2"
+    },
+    "text": {
+      "main": "#1A1D1A",
+      "muted": "#6E736D"
+    },
+    "border": {
+      "DEFAULT": "#E5E7E2",
+      "focus": "#2C614F"
+    },
+    "brands": {
+      "whatsapp": "#25D366",
+      "whatsapp_dark": "#075E54",
+      "whatsapp_bubble_ai": "#DCF8C6"
+    }
+  },
+  "components": {
+    "cards": {
+      "container": "bg-white border border-[#E5E7E2] rounded-2xl shadow-sm",
+      "hover_effect": "transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-[#D1D5DB]"
+    },
+    "buttons": {
+      "primary": "bg-[#D94833] hover:bg-[#C23E2A] text-white rounded-full px-6 py-2.5 font-medium transition-all active:scale-95 shadow-sm",
+      "secondary": "bg-[#2C614F] hover:bg-[#235041] text-white rounded-full px-6 py-2.5 font-medium transition-all active:scale-95 shadow-sm",
+      "outline": "bg-transparent border border-[#E5E7E2] text-[#1A1D1A] hover:bg-[#F3F4F1] rounded-full px-6 py-2.5 font-medium transition-all active:scale-95"
+    },
+    "status_badges": {
+      "new": "bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide",
+      "confirmed": "bg-sky-100 text-sky-800 border border-sky-200 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide",
+      "preparing": "bg-orange-100 text-orange-800 border border-orange-200 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide",
+      "ready": "bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide",
+      "out_for_delivery": "bg-teal-100 text-teal-800 border border-teal-200 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide",
+      "delivered": "bg-stone-200 text-stone-800 border border-stone-300 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide",
+      "cancelled": "bg-rose-100 text-rose-800 border border-rose-200 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
+    },
+    "whatsapp_simulator": {
+      "phone_frame": "rounded-[2.5rem] border-[12px] border-gray-900 bg-[#EFEAE2] shadow-2xl overflow-hidden relative max-w-sm w-full h-[700px] flex flex-col mx-auto",
+      "header": "bg-[#075E54] text-white flex items-center p-4 shadow-md z-10",
+      "chat_area": "flex-1 overflow-y-auto p-4 space-y-4 bg-[#EFEAE2] relative",
+      "bubble_user": "bg-white text-gray-800 rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[85%] text-sm shadow-sm ml-auto relative",
+      "bubble_ai": "bg-[#DCF8C6] text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%] text-sm shadow-sm mr-auto relative",
+      "input_area": "bg-[#F0F0F0] p-3 flex items-center gap-2"
+    },
+    "kanban_board": {
+      "column": "bg-[#F3F4F1] rounded-xl p-4 flex flex-col gap-3 min-w-[300px]",
+      "card": "bg-white border border-[#E5E7E2] rounded-xl p-4 shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+    }
+  },
+  "layouts": {
+    "dashboard_shell": "flex h-screen bg-[#F9FAF8] overflow-hidden",
+    "sidebar": "w-64 bg-white border-r border-[#E5E7E2] flex-shrink-0 hidden md:flex flex-col z-20",
+    "main_content": "flex-1 overflow-y-auto p-6 md:p-8 lg:p-10",
+    "grid_stats": "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+  },
+  "motion": {
+    "micro_interactions": "transition-all duration-200 ease-in-out",
+    "page_transition": "animate-in fade-in slide-in-from-bottom-4 duration-500",
+    "list_stagger": "animate-in slide-in-from-bottom-2 duration-300",
+    "typing_indicator": "flex gap-1 items-center px-1 py-2; dot: w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+  },
+  "accessibility": {
+    "focus_ring": "focus:outline-none focus:ring-2 focus:ring-[#2C614F] focus:ring-offset-2",
+    "contrast": "Ensure all text meets WCAG AA 4.5:1 ratio. Muted text should not be lighter than #6E736D on light backgrounds.",
+    "data_testid": "MANDATORY: All interactive elements, buttons, links, and forms MUST have a data-testid attribute for QA automation."
+  },
+  "image_urls": {
+    "pizza_menu_1": {
+      "url": "https://images.unsplash.com/photo-1727198826083-6693684e4fc1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwzfHxwaXp6YSUyMHNsaWNlJTIwcmVzdGF1cmFudHxlbnwwfHx8fDE3ODgwOTI5NjZ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Slice of pizza being picked up, great for menu item thumbnail"
+    },
+    "pizza_menu_2": {
+      "url": "https://images.unsplash.com/photo-1616141215340-34b0e7c661c8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHw0fHxwaXp6YSUyMHNsaWNlJTIwcmVzdGF1cmFudHxlbnwwfHx8fDE3ODgwOTI5NjZ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Person holding sliced pizza, good for hero or banner"
+    },
+    "biryani_menu_1": {
+      "url": "https://images.unsplash.com/photo-1589302168068-964664d93dc0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwxfHxwYWtpc3RhbmklMjBmb29kJTIwcmVzdGF1cmFudCUyMGJpcnlhbml8ZW58MHx8fHwxNzg4MDkyOTcwfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Plate of Biryani for Pakistani menu items"
+    },
+    "biryani_menu_2": {
+      "url": "https://images.unsplash.com/photo-1716550781939-beb7d7247aae?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwzfHxwYWtpc3RhbmklMjBmb29kJTIwcmVzdGF1cmFudCUyMGJpcnlhbml8ZW58MHx8fHwxNzg4MDkyOTcwfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Close up of Biryani dish"
+    }
+  },
+  "instructions_to_main_agent": [
+    "DO NOT use raw HTML `<select>`, `<input type='date'>`, or native alerts. ALWAYS use Shadcn UI primitives.",
+    "Implement Sonner for all toast notifications (success/error).",
+    "Never use `transition-all` globally, apply only on interactive components.",
+    "Never use generic AI emojis (🤖, 🧠, 💡) for icons. Use clean Lucide icons.",
+    "Do not center-align the main App container or text globally. Keep text left-aligned unless it's a specific empty state.",
+    "Inject Fontshare and Google Fonts links in `index.html` to load Cabinet Grotesk and IBM Plex Sans.",
+    "The Dashboard must feel spacious. Use generous padding (p-6 to p-10) and avoid cramming UI elements.",
+    "Apply `data-testid` attributes to every button, form input, and key informational widget.",
+    "The WhatsApp Simulator should look exactly like a phone mockup floating inside the dashboard or on the side, complete with realistic chat bubbles and typing indicators.",
+    "Ensure the Orders board (Kanban or List) relies heavily on the distinct color badges for instant status recognition."
+  ],
+  "universal_guidelines_for_main_agent": [
+    "You tend to converge toward generic, 'on distribution' outputs. Avoid the 'AI slop' aesthetic. Make creative, distinctive frontends.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Create depth through layered design elements with z-index hierarchy and crisp shadows.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "NEVER use placeholder text for images. Always use the provided `image_urls`.",
+    "Examine existing components to understand the project's patterns before creating new ones."
+  ]
+}
