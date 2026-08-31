@@ -97,3 +97,25 @@ async def meta_webhook(request: Request):
                         customer_name=contacts.get(phone),
                     ))
     return {"ok": True}
+
+
+
+# ---------------- Baileys (internal Node gateway) ----------------
+@router.post("/baileys/{restaurant_id}")
+async def baileys_webhook(restaurant_id: str, request: Request):
+    secret = os.environ.get("WHATSAPP_GATEWAY_SECRET")
+    if secret and request.headers.get("x-gateway-secret") != secret:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    try:
+        body = await request.json()
+    except Exception:
+        return {"ok": True}
+    phone = (body.get("phone") or "").strip()
+    text = (body.get("text") or "").strip()
+    if phone and text:
+        await conversation_service.handle_incoming(IncomingMessage(
+            restaurant_id=restaurant_id, provider="baileys", customer_phone=phone,
+            message_id=body.get("messageId", ""), text=text, timestamp=now_iso(),
+            customer_name=body.get("pushName"),
+        ))
+    return {"ok": True}

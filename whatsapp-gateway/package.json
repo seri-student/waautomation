@@ -1,0 +1,15 @@
+{
+  "name": "whatsapp-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Baileys-based WhatsApp gateway for the AI Restaurant Ordering SaaS (per-restaurant QR sessions).",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "axios": "^1.7.7",
+    "express": "^4.21.0",
+    "pino": "^9.5.0",
+    "qrcode": "^1.5.4"
+  }
+}

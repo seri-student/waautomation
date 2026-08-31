@@ -9,11 +9,13 @@ from .base import WhatsAppProvider, ConnectionStatus
 from .simulator import SimulatorProvider
 from .evolution import EvolutionApiProvider
 from .meta import MetaCloudProvider
+from .baileys import BaileysProvider
 
 _PROVIDERS = {
     "simulator": SimulatorProvider,
     "evolution": EvolutionApiProvider,
     "meta": MetaCloudProvider,
+    "baileys": BaileysProvider,
 }
 
 

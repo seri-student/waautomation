@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  QrCode, Loader2, RefreshCw, Power, Copy, Check, Bot, Headphones, Send, MessageSquare, Smartphone,
+  QrCode, Loader2, RefreshCw, Power, Copy, Check, Bot, Headphones, Send, MessageSquare, Smartphone, Zap, CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import { api } from "@/lib/api";
 
 const PROVIDERS = [
   { id: "simulator", title: "Built-in Simulator", desc: "Test the full ordering flow instantly — no credentials needed.", icon: Smartphone },
+  { id: "baileys", title: "Baileys (Free QR)", desc: "Free WhatsApp via QR code — no browser, runs on our built-in gateway.", icon: Zap },
   { id: "evolution", title: "Evolution API", desc: "Self-hosted WhatsApp via QR code. Great for development/demo.", icon: QrCode },
   { id: "meta", title: "Meta Official API", desc: "Official WhatsApp Cloud API. Recommended for production.", icon: MessageSquare },
 ];
@@ -31,6 +32,98 @@ function CopyBtn({ text }) {
     >
       {done ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
     </button>
+  );
+}
+
+function BaileysPanel({ wa, refetch }) {
+  const [connecting, setConnecting] = useState(false);
+  const [qr, setQr] = useState(null);
+
+  const { data: st } = useQuery({
+    queryKey: ["baileys-status"],
+    queryFn: async () => (await api.waStatus()).data,
+    refetchInterval: 3000,
+  });
+
+  useEffect(() => {
+    if (!st) return;
+    if (st.status === "connected") setQr(null);
+    else if (st.qr_code) setQr(st.qr_code);
+  }, [st]);
+
+  const status = st?.status || wa.status;
+  const number = st?.connected_number;
+
+  const connect = async () => {
+    setConnecting(true);
+    setQr(null);
+    try {
+      const { data } = await api.waConnect();
+      setQr(data.qr_code || null);
+      if (data.qr_code) toast.success("QR generated — scan it now");
+      else if (data.status === "connected") toast.success("Already connected");
+      else toast.message(data.detail || "Connecting…");
+    } catch {
+      toast.error("Gateway error — please retry");
+    } finally {
+      setConnecting(false);
+      refetch();
+    }
+  };
+
+  const disconnect = async () => { await api.waDisconnect(); setQr(null); refetch(); toast.success("Disconnected"); };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-4">
+        <div className="bg-secondary/40 border border-border rounded-2xl p-4 text-sm">
+          <p className="font-semibold mb-1">Free WhatsApp via QR (Baileys)</p>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Click Connect, then open WhatsApp on your phone → <span className="font-medium">Settings → Linked Devices → Link a Device</span> and scan the QR. Your session is saved and reconnects automatically.
+          </p>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Status</span>
+          <ConnectionBadge status={status} testId="baileys-status" />
+        </div>
+        {number && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Connected Number</span>
+            <span className="font-semibold">{number}</span>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Button data-testid="baileys-connect" onClick={connect} disabled={connecting} className="rounded-full gap-2">
+            {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Connect / Reconnect
+          </Button>
+          <Button variant="outline" data-testid="baileys-disconnect" onClick={disconnect} className="rounded-full text-destructive border-destructive/30"><Power className="w-4 h-4" /></Button>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Unofficial gateway for development/low-volume use. For production, prefer the Meta Official API.
+        </p>
+      </div>
+
+      <div className="flex flex-col items-center justify-center bg-muted/50 rounded-2xl p-6 border border-border min-h-[300px]">
+        {status === "connected" ? (
+          <div className="text-center text-emerald-600">
+            <CheckCircle2 className="w-16 h-16 mx-auto mb-3" />
+            <p className="font-display font-bold text-lg text-foreground">WhatsApp Connected</p>
+            <p className="text-sm text-muted-foreground mt-1">{number}</p>
+          </div>
+        ) : qr ? (
+          <>
+            <img data-testid="baileys-qr" src={qr} alt="WhatsApp QR" className="w-52 h-52 rounded-lg bg-white p-2" />
+            <p className="text-sm font-semibold mt-4 text-center">Scan with WhatsApp</p>
+            <p className="text-sm text-muted-foreground text-center">Linked Devices → Link a Device</p>
+          </>
+        ) : (
+          <div className="text-center text-muted-foreground">
+            <Zap className="w-16 h-16 mx-auto mb-3 opacity-30" />
+            <p className="text-sm max-w-[220px]">Click Connect to generate a QR code you can scan from your phone.</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -322,7 +415,7 @@ export default function WhatsAppPage() {
         </TabsList>
 
         <TabsContent value="connection" className="space-y-6 mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <RadioGroup value={wa.provider} onValueChange={(v) => setProvider.mutate(v)} className="contents">
               {PROVIDERS.map((p) => (
                 <label
@@ -352,6 +445,7 @@ export default function WhatsAppPage() {
                 </p>
               </div>
             )}
+            {wa.provider === "baileys" && <BaileysPanel wa={wa} refetch={refetch} />}
             {wa.provider === "evolution" && <EvolutionPanel wa={wa} refetch={refetch} />}
             {wa.provider === "meta" && <MetaPanel wa={wa} refetch={refetch} />}
           </Card>
